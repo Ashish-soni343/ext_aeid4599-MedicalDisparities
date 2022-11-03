@@ -2437,6 +2437,8 @@ class MedSpider(scrapy.Spider):
                     item['file_create_dt'] = self.file_create_dt
                     #item["Source"] = response.url
                     yield item
+                except:
+                    pass
         except:
             pass
 
