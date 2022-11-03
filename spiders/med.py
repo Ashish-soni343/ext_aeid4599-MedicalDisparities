@@ -2318,9 +2318,9 @@ class MedSpider(scrapy.Spider):
                                     else:
                                         item['urban'] = 'Rural'
                         else:
-                            for sr, str in zip(fip_s, fip_n_s):
+                            for sr, f_n in zip(fip_s, fip_n_s):
                                 if int(data[points]['fips']) == int(sr):
-                                    item['state'] = str
+                                    item['region_1'] = f_n
                     except:
                         pass
                     try:
