@@ -7,7 +7,7 @@ from ..items import MedicareDisparitiesItem
 
 class MedSpider(scrapy.Spider):
     name = 'aeid4599_CMS'
-    site = 'https://data.cms.gov/mmd-population/map.html'
+    site = 'https://data.cms.gov/mapping-medicare-disparities'
     source_country = 'USA'
     context_identifier = ''
     file_create_dt = datetime.datetime.utcnow().strftime('%Y-%m-%d %T')[0:10]
@@ -15,6 +15,7 @@ class MedSpider(scrapy.Spider):
     execution_id = ""  # This will be taken automatically from zyte, for now this is hardcoded
     feed_code = "aeid4599"
     t = 0
+    row = 0
     e = []
     source_file = []
     custom_settings = {
@@ -102,8 +103,8 @@ class MedSpider(scrapy.Spider):
         try:
             data = json.loads(response.text)
             for points in range(len(data)):
-                print("points", points['year'])
                 try:
+                    self.row += 1
                     fip_n = ["Sioux County", "Bledsoe County, ", "Woods County", "Montgomery, AL",
                              "Birmingham-Hoover, AL", "Birmingham-Hoover, AL", "Anniston-Oxford, AL",
                              "Birmingham-Hoover, AL", "Florence-Muscle Shoals, AL", "Montgomery, AL", "Gadsden, AL",
@@ -1780,11 +1781,11 @@ class MedSpider(scrapy.Spider):
                     try:
                         for yr, tr in zip(year, year_n):
                             if data[points]['year'] == yr:
-                                item['Year'] = data[points]['year'].replace(yr, tr)
+                                item['date_posted'] = data[points]['year'].replace(yr, tr)
                     except:
                         pass
                     try:
-                        item['Geography'] = data[points]['geography'].replace('s', 'State/Territory').replace('c',
+                        item['category'] = data[points]['geography'].replace('s', 'State/Territory').replace('c',
                                                                                                               'County')
                     except:
                         pass
@@ -1793,15 +1794,15 @@ class MedSpider(scrapy.Spider):
                         if data[points]['geography'] == 'c':
                             for fr, ftr in zip(fip, fip_n):
                                 if int(data[points]['fips']) == int(fr):
-                                    item['county'] = ftr
+                                    item['region_2'] = ftr
                                     if len(data[points]['fips'].lstrip("0")) == 4:
                                         for sr, str in zip(fip_s, fip_n_s):
                                             if int(data[points]['fips'].lstrip("0")[0]) == int(sr):
-                                                item['state'] = str
+                                                item['region_1'] = str
                                     else:
                                         for sr, str in zip(fip_s, fip_n_s):
                                             if int(data[points]['fips'].lstrip("0")[:2]) == int(sr):
-                                                item['state'] = str
+                                                item['region_1'] = str
                                     urbn = ["Montgomery, AL", "Birmingham-Hoover, AL", "Birmingham-Hoover, AL",
                                             "Anniston-Oxford, AL", "Birmingham-Hoover, AL",
                                             "Florence-Muscle Shoals, AL", "Montgomery, AL", "Gadsden, AL",
@@ -2332,7 +2333,7 @@ class MedSpider(scrapy.Spider):
                                      'Medicare Reimbursement', 'Patient Safety Indicator (PSI)', ]
                         for mr, mtr in zip(measure, measure_n):
                             if data[points]['measure'] == mr:
-                                item['Measure'] = data[points]['measure'].replace(mr, mtr)
+                                item['metric'] = data[points]['measure'].replace(mr, mtr)
                     except:
                         pass
                     try:
@@ -2355,7 +2356,7 @@ class MedSpider(scrapy.Spider):
                         #item['Condition'] = data[points]['condition']
                         for cr, ctr in zip(condition, condition_n):
                             if data[points]['condition'] == cr:
-                                item['Condition_Service'] = data[points]['condition'].replace(cr, ctr)
+                                item['category_6'] = data[points]['condition'].replace(cr, ctr)
 
                     except:
                         pass
@@ -2364,7 +2365,7 @@ class MedSpider(scrapy.Spider):
                         secs_n = ['All', 'All', 'Male', 'Female', ]
                         for kr, ktr in zip(secs, secs_n):
                             if data[points]['sexcat'] == kr:
-                                item['Sex'] = data[points]['sexcat'].replace(kr, ktr)
+                                item['gender'] = data[points]['sexcat'].replace(kr, ktr)
                     except:
                         pass
                     # item['Sex'] = data[points]['sexcat'].replace('', 'All').replace('.', 'All').replace('1', 'Male').replace('2', 'Female')
@@ -2373,7 +2374,7 @@ class MedSpider(scrapy.Spider):
                         ages_n = ['All', 'All', '65-74', '75-84', '<65', '84+', ]
                         for ar, atr in zip(ages, ages_n):
                             if data[points]['agecat'] == ar:
-                                item['Age'] = data[points]['agecat'].replace(ar, atr)
+                                item['category_10'] = data[points]['agecat'].replace(ar, atr)
                     except:
                         pass
                     try:
@@ -2381,7 +2382,7 @@ class MedSpider(scrapy.Spider):
                         duas_n = ['Dual & non-dual', 'Dual & non-dual', 'Medicare only', 'Dual only', 'Both Disability and End-Stage Renal Disease']
                         for dr, dtr in zip(duas, duas_n):
                             if data[points]['dual'] == dr:
-                                item['Dual_Eligible'] = data[points]['dual'].replace(dr, dtr)
+                                item['category_9'] = data[points]['dual'].replace(dr, dtr)
                     except:
                         pass
                     # item['Dual_Eligible'] = data[points]['dual']
@@ -2391,7 +2392,7 @@ class MedSpider(scrapy.Spider):
                                   'Smoothened age standardized']
                         for mr, mtr in zip(fltr, fltr_n):
                             if data[points]['fltr'] == mr:
-                                item['Adustment'] = data[points]['fltr'].replace(mr, mtr)
+                                item['category_3'] = data[points]['fltr'].replace(mr, mtr)
                     except:
                         pass
                     try:
@@ -2411,11 +2412,11 @@ class MedSpider(scrapy.Spider):
                                      'Others', 'Black', 'Asian / Pacific', 'islander', ]
                         for rr, rtr in zip(racecat, racecat_n):
                             if data[points]['racecat'] == rr:
-                                item['Race_and_Ethnicity'] = data[points]['racecat'].replace(rr, rtr)
+                                item['category_8'] = data[points]['racecat'].replace(rr, rtr)
                     except:
                         pass
                     try:
-                        item['Analysis_value'] = data[points]['rate']
+                        item['value'] = data[points]['rate']
                     except:
                         pass
                     try:
@@ -2423,11 +2424,13 @@ class MedSpider(scrapy.Spider):
                         dencat_n = ['5,000-9,999', '10,000+', '1,000-4,999', '500-999', '11-499', ]
                         for nr, ntr in zip(dencat, dencat_n):
                             if data[points]['dencat'] == nr:
-                                item['primary_denominator'] = data[points]['dencat'].replace(nr, ntr)
+                                item['units'] = data[points]['dencat'].replace(nr, ntr)
                         # item['primary_denominator'] = data[points]["dencat"]
                     except:
                         pass
-                    item["Feed_code"] = self.feed_code
+                    item["category_2"] = "Population Health Measures"
+                    item["row"] = self.row
+                    item["AEIDprojectId"] = self.feed_code
                     item["Site"] = self.site
                     item["Source_country"] = self.source_country
                     item["Record_create_by"] = self.name
@@ -2435,7 +2438,7 @@ class MedSpider(scrapy.Spider):
                     # item["Execution_id"] = self.execution_id
                     item["Record_create_dt"] = datetime.datetime.utcnow().strftime('%Y-%m-%d %T')
                     item['file_create_dt'] = self.file_create_dt
-                    #item["Source"] = response.url
+                    item["src"] = self.site
                     yield item
                 except:
                     pass
